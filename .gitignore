@@ -1,0 +1,11 @@
+data/
+pypackages/
+*.py[cod]
+*.*~
+*.swp
+/NOTESorTODO
+utility_scripts/
+Django/start_gunicorn_m3db.sh
+Django/stop_guincorn.sh
+Django/gunicorn.conf.py
+test_qsubm3dbcli/
