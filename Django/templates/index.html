@@ -1,0 +1,54 @@
+{% extends "base.html" %}            <!-- Collect the nav links, forms, and other content for toggling -->
+{% block fullwidth %}
+<!-- Intro Header -->
+    <header class="intro">
+        <div class="intro-body">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-8 col-md-offset-2">
+                        <h1 class="brand-heading">M<sup>3</sup>DB</h1>
+                        <p class="intro-text">M3DB marks a new era in Microbiome data storage and analytics.<br>Created by Sheth Lab at Virginia Commonwealth University.</p>
+                        <a href="#about" class="btn btn-circle page-scroll">
+                            <i class="fa fa-angle-double-down animated"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+{%endblock%}
+{%block content%}
+    <!-- About Section -->
+    <section id="about" class="container content-section text-center">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2">
+                <h2>What is M3DB?</h2>
+		<p>Massive Multiomics Microbiome Database (M3DB)<br>M3DB is a new research tool that allows you to easily and quickly upload, analyze and visualize your microbiome datasets.</p>
+            </div>
+        </div>
+    </section>
+<!-- Contact Section -->
+    <section id="contact" class="container content-section text-center">
+<hr>
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2">
+                <h2>Contact the M3DB Team</h2>
+                <p>Feel free to email us to provide some feedback, give us suggestions, get involved with our research, or to just say hello!</p>
+                <p><a href="mailto:nsheth@vcu.edu">M3DB@vcu.edu</a>
+                </p>
+                <ul class="list-inline banner-social-buttons">
+                    <li>
+                        <a href="https://twitter.com/M3DB" class="btn btn-default btn-lg"><i class="fa fa-twitter fa-fw"></i> <span class="network-name">Twitter</span></a>
+                    </li>
+                    <li>
+                        <a href="https://github.com/norrissw/M3DB" class="btn btn-default btn-lg"><i class="fa fa-github fa-fw"></i> <span class="network-name">Github</span></a>
+                    </li>
+                    <li>
+                        <a href="https://plus.google.com/norrissw/posts" class="btn btn-default btn-lg"><i class="fa fa-google-plus fa-fw"></i> <span class="network-name">Google+</span></a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </section>
+        {%endblock%}
+

@@ -1,0 +1,147 @@
+# Create your models here.
+# This is an auto-generated Django model module.
+# You'll have to do the following manually to clean this up:
+#     * Rearrange models' order
+#     * Make sure each model has one field with primary_key=True
+# Feel free to rename the models, but don't rename db_table values or field names.
+#
+# Also note: You'll have to insert the output of 'django-admin.py sqlcustom [appname]'
+# into your database.
+from __future__ import unicode_literals
+
+from django.db import models
+from django.contrib.auth.models import User
+
+class Analysis(models.Model):
+    analysis_id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=256, blank=True)
+    description = models.CharField(max_length=256, blank=True)
+    parameters = models.CharField(max_length=256, blank=True)
+    comments = models.CharField(max_length=500, blank=True)
+    refdb = models.ForeignKey('RefDb')
+    class Meta:
+        db_table = 'analysis'
+
+class Experiment(models.Model):
+    exp_id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=256, blank=True)
+    date = models.DateField(auto_now_add = True)
+    platform = models.CharField(max_length=256, blank=True)
+    project = models.ForeignKey('Project')
+    gene_region = models.CharField(max_length=256, blank=True)
+    user = models.ForeignKey(User)
+    def __unicode__(self):
+        return self.name
+    class Meta:
+        db_table = 'experiment'
+
+class Metadata(models.Model):
+    sample = models.ForeignKey('Sample')
+    name = models.CharField(max_length=256, blank=True)
+    value = models.CharField(max_length=256, blank=True)
+    class Meta:
+        db_table = 'metadata'
+
+class Project(models.Model):
+    project_id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=255, unique=True, blank=True)
+    pi_name = models.CharField(max_length=255, blank=True)
+    e_mail = models.CharField(max_length=255, blank=True)
+    description = models.CharField(max_length=500, blank=True)
+    def __unicode__(self):
+        return self.name
+    class Meta:
+        db_table = 'project'
+
+class RefDb(models.Model):
+    refdb_id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=256, blank=True)
+    description = models.CharField(max_length=500, blank=True)
+    url = models.CharField(max_length=1000, blank=True)
+    version = models.CharField(max_length=256, blank=True)
+    class Meta:
+        db_table = 'ref_db'
+
+class Reads(models.Model):
+    sample = models.ForeignKey('Sample')
+    read_name = models.CharField(max_length=256, primary_key=True) 
+    mee = models.FloatField(null=True, blank=True) 
+    avg_quality = models.FloatField(null=True, blank=True)
+    read_length = models.IntegerField(null=True, blank=True) 
+    overlap_flag = models.CharField(max_length=2, blank=True)
+    read_description = models.CharField(max_length=256, blank=True)
+    hq_flag = models.CharField(max_length=1, blank=True)
+    sequence = models.CharField(max_length=2000, blank=True)
+    quality_string=models.CharField(max_length=2000, blank=True)
+    class Meta:
+        managed = False
+        db_table = 'reads'
+
+class Sample(models.Model):
+    #sample_id = models.CharField(max_length=256)
+    sample_name = models.CharField(max_length=256, blank=True)
+    exp = models.ForeignKey(Experiment)
+    index1 = models.CharField(max_length=20, blank=True)
+    index2 = models.CharField(max_length=20, blank=True)
+    #plate = models.CharField(max_length=10, blank=True)
+    #well = models.CharField(max_length=5, blank=True)
+    id = models.AutoField(primary_key=True)
+    def __unicode__(self):
+        return self.sample_name
+    class Meta:
+        db_table = 'sample'
+
+class SampleProfile(models.Model):
+    profile_id = models.AutoField(primary_key=True)
+    experiment_name = models.ForeignKey(Experiment.name)
+    sample_name = models.ForeignKey(Sample.name)
+    analysis_id = models.ForeignKey(Analysis.analysis_id)
+    taxonomy_id = models.ForeignKey(Taxonomy.tax_id)
+    num_reads = models.IntegerField(null=True, blank=True)
+    abundance = models.FloatField(null=True, blank=True)
+    score = models.FloatField(null=True, blank=True)
+    status = models.CharField(max_length=2, blank=True)
+    miscellaneous = models.CharField(max_length=1000, blank=True)
+    taxonomy_level = models.CharField(max_length=50,blank=True)
+    taxonomy_name = models.CharField(max_length=50,blank=True)
+    def __unicode__(self):
+        return self.sample_name
+    class Meta:
+        db_table = 'abundance_profile'
+
+class SampleStatistics(models.Model):
+    sample = models.ForeignKey(Sample.name)
+    total_reads = models.IntegerField(null=True, blank=True)
+    overlapping_reads = models.IntegerField(null=True, blank=True)
+    per_overlapping_reads = models.FloatField(null=True, blank=True)
+    non_overlapping_reads = models.IntegerField(null=True, blank=True)
+    per_non_overlapping_reads = models.FloatField(null=True, blank=True)
+    avg_read_length = models.FloatField(null=True, blank=True)
+    avg_quality = models.FloatField(null=True, blank=True)
+    avg_mee = models.FloatField(null=True, blank=True)
+    hq_reads = models.IntegerField(null=True, blank=True)
+    per_hq_reads = models.FloatField(null=True, blank=True)
+    per_hq_overlap_reads = models.FloatField(null=True, blank=True)
+    hq_avg_length = models.FloatField(null=True, blank=True)
+    hq_avg_quality = models.FloatField(null=True, blank=True)
+    hq_avg_mee = models.FloatField(null=True, blank=True)
+    def __unicode__(self):
+        return self.sample
+    class Meta:
+        db_table = 'sample_statistics'
+
+class Taxonomy(models.Model):
+    tax_id = models.AutoField(primary_key=True)
+    tax_name = models.TextField(blank=True)
+    tax_level = models.TextField(blank=True)
+    refdb = models.ForeignKey(RefDb)
+    parent_id = models.IntegerField(null=True, blank=True)
+    external_id = models.CharField(max_length=20, blank=True)
+    class Meta:
+        db_table = 'taxonomy'
+
+class UploadedFiles(models.Model):
+    forward_read = models.FileField(upload_to='forwardstage')
+    reverse_read = models.FileField(upload_to='reversestage')
+    def __unicode__(self):
+      return "%s and  %s" % (self.forward_read,self.reverse_read)

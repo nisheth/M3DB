@@ -1,0 +1,115 @@
+<html>
+<head>
+<script src="http://code.jquery.com/jquery-1.11.2.min.js"></script>
+{% load staticfiles %}
+<link rel="stylesheet" href="{% static "css/grayscale.css"%}">
+<link rel="stylesheet" href="{% static "css/bootstrap.min.css"%}">
+<link rel="stylesheet" href="{% static "css/bootstrap.css" %}">
+<script src="{% static "js/bootstrap.min.js" %}"></script>
+<link href="{% static "font-awesome/css/font-awesome.min.css" %}" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet" type="text/css">
+<title>{%block title%}Massive Multiomics Microbiome DB{%endblock%}</title>
+</head>
+<body id="page-top" data-spy="scroll" data-target=".navbar-fixed-top">
+<!-- Navigation -->
+<nav style="background-color:#000000" class="navbar navbar-custom navbar-fixed-top" role="navigation">
+<div class="container">
+    <div class="navbar-header">
+	<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-main-collapse">
+	    <i class="fa fa-bars"></i>
+	</button>
+	<a class="navbar-brand page-scroll" href="{% url "home" %}">
+                    <i class="fa fa-play-circle"></i>  <span class="light">M3DB</span> Home
+                </a>
+            </div>
+{%if not user.is_authenticated %}
+            <!-- Collect the nav links, forms, and other content for toggling -->
+            <div class="collapse navbar-collapse navbar-right navbar-main-collapse">
+                <ul class="nav navbar-nav">
+                    <!-- Hidden li included to remove active class from about link when scrolled up past about section -->
+                    <li class="hidden">
+                        <a href="#page-top"></a>
+                    </li>
+                    <li>
+                        <a class="page-scroll" href="{%url "login"%}">Login</a>
+                    </li>
+                    <li>
+                        <a class="page-scroll" href="{% url "register" %} ">Register</a>
+                    </li>
+                    <li>
+                        <a class="page-scroll" href="{%url "home"%}#contact">Contact</a>
+                    </li>
+                </ul>
+            </div>
+            <!-- /.navbar-collapse -->
+        </div>
+        <!-- /.container -->
+	</nav>
+{%else%}
+      <!-- Collect the nav links, forms, and other content for toggling -->
+            <div class="collapse navbar-collapse navbar-right navbar-main-collapse">
+                <ul class="nav navbar-nav">
+                    <!-- Hidden li included to remove active class from about link when scrolled up past about section -->
+                    <li class="hidden">
+                        <a href="#page-top"></a>
+                    </li>
+		    <li class="dropdown">
+		    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Projects <span class="caret"></span></a>
+		    <ul class="dropdown-menu" role="menu">
+                <li>    <a href="{%url "viewProject" %}">View Project</a>       </li>
+		     	<li>    <a href="{%url "createProject" %}">Create Project</a>	</li>
+
+		    </ul>
+		   </li>
+		<li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Experiments <span class="caret"></span></a>
+                    <ul class="dropdown-menu" role="menu">
+                        <li> <a href="{% url "viewExperiment" %} ">View Experiments</a>    </li>
+                        <li> <a href="{% url "createExperiment" %} ">Create Experiment</a> </li>
+			
+		   </ul>
+		</li>
+		<li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Samples <span class="caret"></span></a>
+                    <ul class="dropdown-menu" role="menu">
+            <li><a href="{% url "viewSample" %}">View Samples</a></li>
+            <!--
+		    <li><a href="{% url "sample" %}">Upload Samples</a></li> Disable temporarily
+		    <li><a href="{% url "uploadReads" %}">Upload Reads</a></li> -->
+	</ul>
+		</li>
+		<li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Analytics <span class="caret"></span></a>
+                    <ul class="dropdown-menu" role="menu">
+		            <li> <a href="{% url "viewSamplestats" %}">Samples Statistics </a> </li>
+		            <li> <a href="{% url "viewAbundance" %}">Abundance Profile </a>    </li>
+                    <li> <a href="{% url "viewReadAssign" %}">Read Assignments </a>    </li>
+                    </ul>
+		</li>
+	        <li>
+                        <a class="page-scroll" href="{%url "home"%}#contact">Contact</a>
+                </li>
+		<li>
+			<a class="page-scroll" href="{%url "logout"%}">Logout</a>
+		</li>
+	        </ul>
+            </div>
+            <!-- /.navbar-collapse -->
+        </div>
+
+
+    </nav>
+{%endif%}
+	{%block fullwidth %}
+        {%endblock%}
+<div class="container">
+        {%block content%}
+        {%endblock%}
+</div>
+        <hr>
+<center>
+        <p>{% now "DATETIME_FORMAT" %}</p>
+</center>
+</body>
+</html>
