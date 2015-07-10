@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{%block content %}
+<section id="viewsampstat" class="container content-section text-center">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2">
+
+			{% if results %}
+			<h2>Displaying Sample Statistics for: {{results.0.exp_id}}</h2>
+			<br>
+
+			<p style="margin-left:-200px"><table border=1>
+				<tr><th>Sample Name</th><th>Total Reads</th><th>Overlapping Reads</th><th>Overlapping Reads (Percentage)</th><th>Non-Overlapping Reads</th><th>Non-Overlapping Reads (Percentage)</th><th>Average Read Lenght</th><th>Average Quality</th><th>Average MEE</th><th>HQ Reads</th><th>HQ Reads (Percentage)</th><th>HQ Reads (Overlapping)</th><th>Average Lenght of HQ Reads</th><th>Average Quality of HQ Reads</th><th>Average MEE of HQ Reads</th></tr>
+					{%for sample in results%}
+					<tr><td>{{sample.sample_id}}</td><td>{{sample.total_reads}}</td><td>{{sample.overlapping_reads}}</td><td>{{sample.per_overlapping_reads}}</td><td>{{sample.non_overlapping_reads}}</td><td>{{sample.per_non_overlapping_reads}}</td><td>{{sample.avg_read_length}}</td><td>{{sample.avg_quality}}</td><td>{{sample.avg_mee}}</td><td>{{sample.hq_reads}}</td><td>{{sample.per_hq_reads}}</td><td>{{sample.per_hq_overlap_reads}}</td><td>{{sample.hq_avg_length}}</td><td>{{sample.hq_avg_quality}}</td><td>{{sample.hq_avg_mee}}</td>
+					</tr>
+					{%endfor%}
+			</table></p>
+		</div>
+	</div>
+</section>
+			{% else %}
+			<h2>Select Experiment to View Associated Sample Statistics</h2>
+                        <form method='POST' action='{% url 'viewSamplestats' %}'>
+                        {% csrf_token %}
+			<p align="center">
+			<table>
+				{{form.as_table}}
+			</table></p>
+			<input type='submit'/>
+			</form>
+			</div>
+		</div>
+</section>
+			{% endif %}
+{%endblock%}

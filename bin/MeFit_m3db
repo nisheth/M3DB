@@ -1,0 +1,315 @@
+#!/usr/bin/env python
+
+####################################################################
+####################         Description        ####################
+####################################################################
+# Author: Hardik I. Parikh
+# Date: 13 Oct 2014
+# MeFiT (Merging and Filtering Tool for overlapping paired-end reads)
+#  
+# This script will merge the paired-end reads using CASPER, 
+# calculate merge statistics, and quality filter reads using 
+# percent error based on read length (For Example - A 1% 
+# error in a read of length 500 means a MEE threshold of 5)
+#
+# Input parameters - 
+# 
+# InputDir -  Path-to-directory containing sample R1, R2 fastq
+# 
+# Percent Error - Acceptable error rate in merged reads
+# 
+# Option to merge non-overlapping reads 
+#
+# Patch Length - The number of 'N's to patch the non-overlapping
+#                reads with
+# 
+################################################################
+# This version has been edited by Shaun Norris
+# It is designed to work with the M3DBcli tool.
+# Really the only thing that changed was the directories where data is stored.
+################################################################
+
+import sys
+import os
+import argparse
+import re
+import math
+import numpy
+import HTSeq
+
+# Argparse to get input from command line
+parser = argparse.ArgumentParser(description='This script merges paired reads using CASPER and quality filters using MEE cut-off')
+parser.add_argument('-r1', '--sampleR1', type=str, help='PATH to Sample R1 fastq file', required=True)
+parser.add_argument('-r2', '--sampleR2', type=str, help='PATH to Sample R2 fastq file', required=True)
+parser.add_argument('-meep', '--perc_err', type=float, help='meep cut-off - MEE percent of read length')
+parser.add_argument('-a', '--non_ovlp', action='store_true', help='Save all reads, including the non-overlapping reads', default=False)
+parser.add_argument('-n', '--patch_len', type=int, help="Length of string (Ns) to insert between non-overlapping reads")
+parser.add_argument('-name','--samplename',type=str, help="Sample Name as chosen by user")
+args = parser.parse_args()
+
+if args.non_ovlp is True and args.patch_len is None:
+	parser.error("-a requires -n")
+
+
+# Create OutputDir, ERROR if exists
+datadir = "/gpfs_fs/bccl/M3DB/data/"
+casper_outdir = datadir + "casper_out/" 
+if not os.path.exists(casper_outdir):
+	os.makedirs(casper_outdir)		# Outoput Directory for CASPER output
+hq_outdir = datadir + "hq_out/" 
+if not os.path.exists(hq_outdir):
+	os.makedirs(hq_outdir)			# Outoput Directory for Filtered-HQ
+
+
+# Function to calculate EE from Q scores
+# Calculate error probablitites for each q-score
+e_lst = []
+for q in range(1,42):
+	e = (1.0 / math.pow(10.0, (q/10.0)))
+	e_lst.extend([e]) 
+
+def calc_ee(*qual):
+	ee = 0.0
+	for each_qual in qual:
+		for q in each_qual:
+			ee += e_lst[q-1]	# error probabilites 
+	ee = round(ee, 5)
+	return ee
+
+
+# Function to merge paired-end reads and calculate statistics	
+def merge_CASPER(fwd_file, rev_file, outname, k, g, logfile):
+	casper_cmd = "casper " + fwd_file + " " + rev_file + " -o " + outname +  " -k " + str(k) + " -g " + str(g) + " -l " + " > " + logfile 
+	os.system(casper_cmd)
+	
+	reads = 0
+	merged = 0
+	unmerged = 0
+	merged_perc = 0
+	unmerged_perc = 0
+
+	# Open log file, capture statistics, store it in dictionary
+	OLF = open(logfile, 'r')
+	for line in OLF:
+		if "Total number of reads" in line:
+			line_lst = line.split()
+			reads = line_lst[6]
+		elif "of merged reads" in line:
+			line_lst = line.split()
+			merged = line_lst[6]
+			merged_perc = line_lst[7]
+			merged_perc = re.sub(r'\(','',merged_perc)
+			merged_perc = re.sub(r'\)','',merged_perc)
+		elif "of unmerged reads" in line:
+			line_lst = line.split()
+			unmerged = line_lst[6]
+			unmerged_perc = line_lst[7]
+			unmerged_perc = re.sub(r'\(','',unmerged_perc)
+			unmerged_perc = re.sub(r'\)','',unmerged_perc)
+	OLF.close()	
+
+	out_lst = [reads, merged, merged_perc, unmerged, unmerged_perc] 
+	return out_lst
+	
+
+
+# Quality filtering function. Also, merge non-overlapping reads if specified. 
+
+def hq_MEE(casperOvlpFastq, casperforleft, casperrevleft, perc_err, non_ovlp, ovlpfastq, nonovlpfastq, ovlphqfastq, nonovlphqfastq):
+	
+	ONF1 = open(ovlpfastq, "w")
+	ONF3 = open(ovlphqfastq, "w")
+	
+	reads=0				# Total Reads counter
+	filteredreads=0			# Filtered reads counter
+	filreadsovlp=0			# Filtered Overlapping Reads counter
+	totSreadlen=0			# Total Sample read length
+	avgSreadlen=0			# Avg Sample read length
+	totSqual=0			# Total Sample quality						
+	avgSqual=0			# Avg Sample quality
+	totSee=0			# Total Sample EE
+	avgSee=0			# Avg Sample EE
+	filtotSreadlen=0		# Filtered Total Sample read length
+	filavgSreadlen=0		# Filtered Avg Sample read length
+	filtotSqual=0			# Filtered Total Sample quality						
+	filavgSqual=0			# Filtered Avg Sample quality
+	filtotSee=0			# Filtered Total Sample EE
+	filavgSee=0			# Filtered Avg Sample EE
+
+	for r in HTSeq.FastqReader(casperOvlpFastq):
+		reads += 1
+		newrname = r.name + " 1"							# overlapping read
+		rlen = len(r.seq)								# read length
+		avgQ = int(numpy.mean(r.qual))						# avg. read quality
+		newrname = newrname + ":len=" + str(rlen)
+		newrname = newrname + ":avgQ=" + str(avgQ)
+		ee = calc_ee(r.qual)							# Total error probabilities
+		newrname = newrname + ":EE=" + str(ee)
+		totSreadlen += rlen
+		totSqual += avgQ		
+		totSee += ee
+		newr = HTSeq.SequenceWithQualities(r.seq,newrname,r.qualstr)
+		newr.write_to_fastq_file(ONF1)
+		mee_threshold = (float(rlen) * perc_err) / 100.0				# MEE threshold value based on input %error
+		if ee <= mee_threshold:
+			filteredreads += 1
+			filreadsovlp += 1
+			filtotSreadlen += rlen
+			filtotSqual += avgQ		
+			filtotSee += ee
+			newr.write_to_fastq_file(ONF3)
+			
+
+	if non_ovlp:
+ 
+		ONF2 = open(nonovlpfastq, "w")
+		ONF4 = open(nonovlphqfastq, "w")
+		
+		for r1,r2 in zip(HTSeq.FastqReader(casperforleft),HTSeq.FastqReader(casperrevleft)):
+			reads += 1
+			newrname = r1.name + " 0"									# not overlapping
+			r2rc=r2.get_reverse_complement()                                                    	# r2 needs to be reverse complemented
+			newrseq = r1.seq + args.patch_len*"N" + r2rc.seq                                              # add Ns between reads
+			newrqualstr = r1.qualstr + args.patch_len*"#" + r2.qualstr[::-1]                              # add lowest quality for these Ns
+			rlen = len(newrseq)                                                                   	# read length with Ns
+			rlen_noN = (len(r1.seq)+len(r2.seq))                                                        # read length without Ns
+			avgQ = int((numpy.sum(r1.qual)+numpy.sum(r2.qual))/rlen_noN)       		# average read quality without Ns
+			newrname = newrname + ":len=" + str(rlen)
+			newrname = newrname + ":avgQ=" + str(avgQ)
+			ee = calc_ee(r1.qual, r2.qual)							# Total error probabilities
+			newrname = newrname + ":EE=" + str(ee)
+			totSreadlen += rlen
+			totSqual += avgQ		
+			totSee += ee
+			newr = HTSeq.SequenceWithQualities(newrseq,newrname,newrqualstr)
+			newr.write_to_fastq_file(ONF2)
+			mee_threshold = (float(rlen_noN) * perc_err) / 100.0				# MEE threshold value based on input %error
+			if ee <= mee_threshold:
+				filteredreads += 1
+				filtotSreadlen += rlen
+				filtotSqual += avgQ		
+				filtotSee += ee
+				newr.write_to_fastq_file(ONF4)
+		
+		ONF2.close()
+		ONF4.close()
+		
+
+	ONF1.close()
+	ONF3.close()
+
+	# Calculate Summary Statistics			
+	percfiltered = (filteredreads * 100.0) / float(reads)
+	percfiltered = round(percfiltered, 2)
+	
+	avgSreadlen = float(totSreadlen/float(reads))
+	avgSreadlen = round(avgSreadlen, 2)
+	
+	avgSqual = float(totSqual/float(reads))
+	avgSqual = round(avgSqual, 2)
+	
+	avgSee = float(totSee) / float(reads)
+	avgSee = round(avgSee, 2) 
+
+	filpercovlp = (filreadsovlp * 100.0) / float(filteredreads)
+	filpercovlp = round(filpercovlp, 2)
+	
+	filavgSreadlen = float(filtotSreadlen/float(filteredreads))
+	filavgSreadlen = round(filavgSreadlen, 2)
+	
+	filavgSqual = float(filtotSqual/float(filteredreads))
+	filavgSqual = round(filavgSqual, 2)
+	
+	filavgSee = float(filtotSee) / float(filteredreads)
+	filavgSee = round(filavgSee, 2) 
+		
+	percerr = str(perc_err)	
+	
+	out_lst = [avgSreadlen, avgSqual, avgSee, percerr, filteredreads, percfiltered, filpercovlp, filavgSreadlen, filavgSqual, filavgSee]
+	return out_lst
+
+
+# Main function - 
+
+def main():
+
+	fwd_file = args.sampleR1
+	rev_file = args.sampleR2
+
+	SummaryStats_Dict = {}
+		
+	#sample_id = re.sub(r'.*\/', '', fwd_file)
+	#sample_id = re.sub(r'_R1.*', '', sample_id)
+	sample_id = args.samplename	
+	SummaryStats_Dict[sample_id] = []
+
+	# Merge paired-end reads and return stats
+	outname = casper_outdir + "/" + sample_id
+	logfile = outname + ".casper.log"	
+
+	merge_stats = merge_CASPER(fwd_file, rev_file, outname, 19, 0.27, logfile) 
+	SummaryStats_Dict[sample_id].extend(merge_stats)	
+	
+	# Quality filter merged reads. Join non-ovlp reads and quality filter them, if specified
+	casperOvlpFastq = outname + ".fastq"
+	casperforleft = outname + "_for_left.fastq"
+	casperrevleft = outname + "_rev_left.fastq"
+	ovlpfastq = hq_outdir + "/" + sample_id  + ".ovlp.fastq"
+	nonovlpfastq = hq_outdir + "/" + sample_id + ".nonovlp.fastq"
+	ovlphqfastq = hq_outdir + "/" + sample_id  + ".ovlp.hq.fastq"
+	nonovlphqfastq = hq_outdir + "/" + sample_id  + ".nonovlp.hq.fastq"
+
+	perc_err = args.perc_err
+	non_ovlp = args.non_ovlp
+
+	hq_stats = hq_MEE(casperOvlpFastq, casperforleft, casperrevleft, perc_err, non_ovlp, ovlpfastq, nonovlpfastq, ovlphqfastq, nonovlphqfastq)
+	
+	SummaryStats_Dict[sample_id].extend(hq_stats)	
+
+
+	# Print Summary Statistics
+	statsfile = datadir + sample_id + "_stats.txt"
+	OSSF = open(statsfile, "w")
+	header_list = ["SampleID", "TotalReads", "Overlapping", "%Overlapping", "NonOverlapping", "%NonOverlapping", "AvgReadLength", "AvgQuality", "AvgMEE", "meep-cutoff", "HQReads", "%HQReads",  "HQ-%Overlapping", "HQ-AvgReadLength", "HQ-AvgQuality", "HQ-AvgMEE"] 
+	ss_header = "\t".join(header_list)
+	print >> OSSF, ss_header
+	for key,value in sorted(SummaryStats_Dict.iteritems()):
+		output_lst = [key] + value
+		output_str = "\t".join((str(i) for i in output_lst))
+		print >> OSSF, output_str 
+
+	OSSF.close()
+        print statsfile	
+	# Print Parameteres
+	paramsfile = datadir + "mefit_params.txt"
+	OPF = open(paramsfile, "w")
+	print >> OPF, "CASPER Parameters:"
+	CLF = open(logfile, "r")
+	for line in CLF:
+		line = line.strip()
+		if "Number of threads" in line:
+			print >> OPF, line
+		elif "K-mer size" in line:
+			print >> OPF, line
+		elif "Threshold for difference of quality score" in line:
+			print >> OPF, line
+		elif "Threshold for mismatching ratio" in line:
+			print >> OPF, line
+		elif "Minimum length of overlap" in line:
+			print >> OPF, line
+		elif "Using Jellyfish" in line:
+			print >> OPF, line
+	CLF.close()
+	print >> OPF, ""		
+	print >> OPF, ""		
+	print >> OPF, "Merge and Quality Filter Parameters:"
+	print >> OPF, "Percent error for Quality Filtering - ", args.perc_err
+	print >> OPF, "Keep non-overlapping reads - ", args.non_ovlp
+	if args.patch_len:
+		print >> OPF, "Patch length for non-overlapping reads - ", args.patch_len
+
+
+if __name__ == "__main__": main() 
+
+sys.exit()
+

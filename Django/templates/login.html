@@ -1,0 +1,47 @@
+{%extends 'base.html'%}
+{%block title%}M3DB: Login{%endblock%}
+
+{%block fullwidth%}
+{% if request.user.is_authenticated %}
+<p>Welcome! You are logged in</p>
+{%else%}
+    <header class="intro">
+        <div class="intro-body">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-8 col-md-offset-2">
+                        <h1 class="brand-heading">M<sup>3</sup>DB</h1>
+<p class="intro-text">
+
+<form class="form-horizontal" role="form" action="{%url 'login'%}" method='post'>{%csrf_token%}
+  <input type='hidden' name='next' value="{{next}}"/>
+  <div class="form-group">
+    <div class="col-sm-12">
+      <h1>Sign-In</h1>
+    </div>
+  </div>
+  <div class="form-group">
+    <div class="col-sm-12">
+      <input type="text" class="form-control" id="inputuser" name='username' placeholder="Email">
+    </div>
+  </div>
+  <div class="form-group">
+    <div class="col-sm-12">
+      <input type="password" class="form-control" id="inputpass" name='password' placeholder="Password">
+    </div>
+  </div>
+  <div class="form-group">
+    <div class="col-sm-12">
+      <button type="submit" class="btn btn-default pull-left">Sign in</button>
+    </div>
+  </div>
+</form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+{%endif%}
+{%endblock%}
+

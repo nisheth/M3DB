@@ -1,0 +1,7 @@
+M3DB is the next generation in metagenomic analysis pipelines and datamanagement.
+
+M3DB is written to be extensible and flexible to perform, store, and visualize metagenomic data sets.
+At its core it utilizes MeFiT, RDP and STIRRUPS to merges, filter and classify any 16S sequence obtained on next generation sequencing platforms (Illumina/454).
+All of this data including the reads themselves are the placed in the data warehouse and compressed.
+This data set is then able to be queried, returned to its original form. This reduces the overhead cost of storing this information
+and improves performance when quering the data by using mapreduce technologies through Apache Hadoop/Hive.

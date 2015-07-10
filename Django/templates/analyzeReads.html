@@ -1,0 +1,38 @@
+{%extends "base.html" %}
+
+{% block content %}
+<section id="analyzereads" class="container content-section text-center">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2">
+				<h2>Analyze Sequence Data</h2>
+
+				{%if msg %} {{msg}}
+			</div>
+		</div>
+</section>
+				{%else%}
+				<form method='POST' action='{%url "analyzeReads" %}' enctype='multipart/form-data'>{% csrf_token %}
+					<table>
+					{{form.as_table}}
+					</table>
+				<input type='submit'/>
+				</form>
+			</div>
+		</div>
+</section>
+{%endif%}
+<script>
+$('#id_save_nonoverlap').change(function(){
+ if ($('#id_save_nonoverlap').is(':checked')){
+        $('#id_patch_length').closest('tr').show(); 
+
+   }else {
+   $('#id_patch_length').closest('tr').hide();
+   } 
+}  );
+$(document).ready(function(){ 
+$('#id_patch_length').closest('tr').hide()
+}
+);
+</script>
+{%endblock%}
