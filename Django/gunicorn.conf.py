@@ -1,4 +1,4 @@
-# M3Dbb Gunicorn configuration file.
+# M3DB Gunicorn configuration file.
 
 #
 # Server socket
