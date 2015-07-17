@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # Toying with the idea of separating out the database entirely from the api.
-import psycopg2, psycopg2.extras, re, os
-from pyhive import presto
+import psycopg2, psycopg2.extras, re, os,pyhs2
 from collections import defaultdict
 
 def __init__(config):
@@ -13,12 +12,13 @@ def __init__(config):
     pg_db = config["pg_server.database"]
     hive_host = config["hive_server.host"]
     hive_port = int(config["hive_server.port"])
-    hive_user = config["hive_server.user"]
+    hive_user = str(config["hive_server.user"])
     hive_pass = config["hive_server.password"]
     hive_auth = config["hive_server.auth"]
+    hive_db = config["hive_server.database"]
     _db_connection = psycopg2.connect(host=pg_host,user=pg_user,database=pg_db,port=pg_port) # TRUST current used
     _db_cur = _db_connection.cursor()
-    _hs_connection = presto.connect(hive_host) #default account
+    _hs_connection = pyhs2.connect(host=hive_host, port=hive_port, authMechanism=hive_auth, user=hive_user,password=hive_pass, database=hive_db) #default account
     _hs_cur = _hs_connection.cursor()
     return _db_connection,_db_cur,_hs_connection,_hs_cur
 def createproject(config,args):
@@ -71,16 +71,6 @@ def gettax(config,dbver):
         taxdict[row[0]] = row[1]
     __del__(_db_connection,_hs_connection)
     return taxdict
-# def getsidexp(config,samplename):
-#     _db_connection,_db_cur,_hs_connection,_hs_cur = __init__(config)
-#     _db_cur.execute("SELECT exp_name FROM sample WHERE name = '%s';" % samplename)
-#     expname = re.sub("\'|\(|\)|\,","",str(_db_cur.fetchone()))
-#     _db_cur.execute("SELECT exp_id FROM sample WHERE name = '%s';" % samplename)
-#     expname = re.sub("\'|\(|\)|\,","",str(_db_cur.fetchone()))
-#     _db_cur.execute("SELECT sample_id FROM sample WHERE name = '%s';" % samplename)
-#     sampleid= re.sub("\'|\(|\)|\,","",str(_db_cur.fetchone()))
-#     __del__(_db_connection,_hs_connection)
-#     return expname,sampleid
 def getfasta(config,sampleid,fastaname):
     # Select the appropriate reads and create a fasta file from the HIVE reads table #
     if not os.path.isfile(fastaname):
@@ -212,14 +202,14 @@ def insertreadassign(config,readassign):
     except:
         print ""
     print "Inserting Read Assignments..."
-    datadir = '/home/norrissw/m3db_data/' # THIS HAS TO BE HARDCODED FOR NOW
-    _hs_cur.execute("LOAD DATA LOCAL INPATH '%s' INTO TABLE m3db.read_assignment" % (datadir + readassign))
+    hive_dir = config["hive_server.datadir"] # THIS HAS TO BE HARDCODED FOR NOW
+    _hs_cur.execute("LOAD DATA LOCAL INPATH '%s' INTO TABLE m3db.read_assignment" % (hive_dir + readassign))
     __del__(_db_connection,_hs_connection)
 def insertreads(config,fastq):
 	# Insert parsed sequence data after MeFit has run #
     _db_connection,_db_cur,_hs_connection,_hs_cur = __init__(config)
-    datadir = '/home/norrissw/m3db_data/' # THIS HAS TO BE HARDCODED FOR NOW
-    _hs_cur.execute("LOAD DATA LOCAL INPATH '%s' INTO TABLE m3db.reads" % (datadir + fastq))
+    hive_dir = config["hive_server.datadir"] # THIS HAS TO BE HARDCODED FOR NOW
+    _hs_cur.execute("LOAD DATA LOCAL INPATH '%s' INTO TABLE m3db.reads" % (hive_dir + fastq))
     __del__(_db_connection,_hs_connection)
 def __del__(pg,hs):
     pg.close()
