@@ -8,4 +8,5 @@ utility_scripts/
 Django/start_gunicorn_m3db.sh
 Django/stop_guincorn.sh
 Django/gunicorn.conf.py
+Django/M3DB/settings.py
 test_qsubm3dbcli/
