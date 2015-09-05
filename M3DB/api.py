@@ -2,6 +2,7 @@ import re,subprocess,sys,os,logging
 from M3DB import parse as m3dbparse
 from M3DB import pipeline as run
 import Pyro4
+import pickle
 
 datadir = "/gpfs_fs/bccl/M3DB/data/"
 #dbp =  Pyro4.Proxy("PYRO:Pyro.NameServer@128.172.190.159:9090")
@@ -40,9 +41,12 @@ def mefit(args):
         sys.exit(1)
     #Write to postgres database table "sample_statistics"
     print "Inserting Sample Statistics Data..."#,sampfile
-    sampfile = open((datadir + (samplename + '_stats.txt')))
+    sampfile = open((datadir + (samplename + '_stats.txt')),'r')
+    header = sampfile.next()
+    stats = sampfile.next()
+    sampfile.close()
     try:
-        sampleid,expid = dbp.insertsampstat(sampfile,exp,samplename,args.forward)
+        sampleid,expid = dbp.insertsampstat(stats,exp,samplename,args.forward)
     except Exception as error:
         print "An error occured during database insertion... \n Exiting...",error
         sys.exit(2)
