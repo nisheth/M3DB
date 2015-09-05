@@ -1,8 +1,6 @@
 import re,subprocess,sys,os,logging
 from M3DB import parse as m3dbparse
-from M3DB import db as db
 from M3DB import pipeline as run
-
 import Pyro4
 
 datadir = config["general.datadir"]
