@@ -3,6 +3,7 @@ from M3DB import parse as m3dbparse
 from M3DB import db as db
 from M3DB import pipeline as run
 from M3DB import configparse as cfg
+import Pyro4
 #
 _ConfigDefault = {
     "pg_server.dbms":            "PostgreSQL",
@@ -22,9 +23,11 @@ _ConfigDefault = {
     }
 config = cfg.LoadConfig('m3db.conf',_ConfigDefault)
 datadir = config["general.datadir"]
+dbp =  Pyro4.Proxy("PYRO:m3db.taxonomy@localhost:44517")
 def createproject(args):
     # Create a new project #
-    db.createproject(config,args)
+    opts = vars(args)
+    dbp.createproject(config,opts)
     print "Project has been created:",args.name
 def createexp(args):
     db.createexp(config,args)
