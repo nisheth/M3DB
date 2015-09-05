@@ -40,6 +40,7 @@ def mefit(args):
         sys.exit(1)
     #Write to postgres database table "sample_statistics"
     print "Inserting Sample Statistics Data..."#,sampfile
+    sampfile = open((datadir + (samplename + '_stats.txt')))
     try:
         sampleid,expid = dbp.insertsampstat((datadir + (samplename + '_stats.txt')),exp,samplename,args.forward)
     except:
