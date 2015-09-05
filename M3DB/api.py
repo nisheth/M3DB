@@ -3,8 +3,8 @@ from M3DB import parse as m3dbparse
 from M3DB import pipeline as run
 import Pyro4
 
-datadir = config["general.datadir"]
-dbp =  Pyro4.Proxy("PYRO:m3db.taxonomy@localhost:44517")
+datadir = "/gpfs_fs/bccl/M3DB/data/"
+dbp =  Pyro4.Proxy("PYRO:m3db.cli@localhost:36002")
 def createproject(args):
     # Create a new project #
     opts = vars(args)
@@ -12,8 +12,11 @@ def createproject(args):
     print "Project has been created:",args.name
 def createexp(args):
     opts = vars(args)
-    dbp.createexp(opts)
-    print "Experiment has been created:",args.name        
+    try:
+        dbp.createexp(opts)
+        print "Experiment has been created:",args.name        
+    except Exception as error:
+        print "Something went wrong during experiment creation:\n",error
 def mefit(args):
     # Run the Merging and Filter pipeline and insert the data #
     project = args.project
@@ -31,8 +34,8 @@ def mefit(args):
     print "Running MeFit..."
     try:
         run.mefit(args)
-    except (RuntimeError, TypeError, NameError) as e:
-        print "Something went wrong with MeFit Pipeline\n Error: %s \n Exiting..." % e
+    except Exception as error:
+        print "Something went wrong with MeFit Pipeline\n Error: %s \n Exiting..." % error
         sys.exit(1)
     #Write to postgres database table "sample_statistics"
     print "Inserting Sample Statistics Data..."#,sampfile
@@ -49,8 +52,8 @@ def mefit(args):
         if sampleid == None:
             sampleid = db.getsampleid(samplename,expid)
         m3dbparse.reads((datadir + 'hq_out' + '/' + (fastq1)),(datadir + 'hq_out' + '/' + (fastq3)),outpath,samplename,sampleid,meep,expid,args.forward,args.reverse)
-    except (RuntimeError, TypeError, NameError) as e:
-        print "An error occured while parsing read files: %s" % e
+    except Exception as error:
+        print "An error occured while parsing read files: %s" % error
         if os.path.isfile((datadir + 'hq_out' + '/' + (fastq3))):
             print "Continuing..."
         else:
