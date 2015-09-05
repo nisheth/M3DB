@@ -2,35 +2,19 @@ import re,subprocess,sys,os,logging
 from M3DB import parse as m3dbparse
 from M3DB import db as db
 from M3DB import pipeline as run
-from M3DB import configparse as cfg
+
 import Pyro4
-#
-_ConfigDefault = {
-    "pg_server.dbms":            "PostgreSQL",
-    "pg_server.database":            "m3db",
-    "pg_server.user":            "postgres",
-    "pg_server.password":        "password",
-    "pg_server.host":            "myserver.mydomain.com",
-    "pg_server.port":            "5432",
-    "hive_server.dbms":          "Hive",
-    "hive_server.database":      "m3db",
-    "hive_server.user":          "hiveuser",
-    "hive_server.password":      "password",
-    "hive_server.host":          "myserver.mydomain.com",
-    "hive_server.port":          "10000",
-    "hive_server.auth":          "PLAIN",
-    "general.datadir":           "/path/to/data/"
-    }
-config = cfg.LoadConfig('m3db.conf',_ConfigDefault)
+
 datadir = config["general.datadir"]
 dbp =  Pyro4.Proxy("PYRO:m3db.taxonomy@localhost:44517")
 def createproject(args):
     # Create a new project #
     opts = vars(args)
-    dbp.createproject(config,opts)
+    dbp.createproject(opts)
     print "Project has been created:",args.name
 def createexp(args):
-    db.createexp(config,args)
+    opts = vars(args)
+    dbp.createexp(opts)
     print "Experiment has been created:",args.name        
 def mefit(args):
     # Run the Merging and Filter pipeline and insert the data #
@@ -55,7 +39,7 @@ def mefit(args):
     #Write to postgres database table "sample_statistics"
     print "Inserting Sample Statistics Data..."#,sampfile
     try:
-        sampleid,expid = db.insertsampstat(config,(datadir + (samplename + '_stats.txt')),exp,samplename,args.forward)
+        sampleid,expid = dbp.insertsampstat((datadir + (samplename + '_stats.txt')),exp,samplename,args.forward)
     except:
         print "An error occured during database insertion... \n Exiting..."
         sys.exit(2)
@@ -63,9 +47,9 @@ def mefit(args):
     print "Parsing Merged/Filtered sequence data..."
     try:
         if expid == None:
-            expid = db.getexpid(config,exp)
+            expid = dbp.getexpid(exp)
         if sampleid == None:
-            sampleid = db.getsampleid(config,samplename,expid)
+            sampleid = db.getsampleid(samplename,expid)
         m3dbparse.reads((datadir + 'hq_out' + '/' + (fastq1)),(datadir + 'hq_out' + '/' + (fastq3)),outpath,samplename,sampleid,meep,expid,args.forward,args.reverse)
     except (RuntimeError, TypeError, NameError) as e:
         print "An error occured while parsing read files: %s" % e
@@ -77,7 +61,7 @@ def mefit(args):
     #Write reads to hive database table "reads"
     print "Inserting Sequence Data..."
     try:
-        db.insertreads(config,outname)
+        dbp.insertreads(outname)
     except:
         print "An error has occured while inserting reads...\nExiting..."
         sys.exit(2)
@@ -93,19 +77,19 @@ def rdp(args):
     analysisname = samplename + "_RDP"
     fastaname = datadir + samplename + '.fasta'
     rdppipe = '/home/parikhhi/bin/RDPpipeline.sh'
-    taxdict = db.gettax(config,1)
-    expid = db.getexpid(config,exp)
-    sampleid = db.getsampleid(config,samplename,expid)
+    taxdict = dbp.gettax(1)
+    expid = dbp.getexpid(exp)
+    sampleid = dbp.getsampleid(samplename,expid)
     print "Generating FASTA from database... for sample: %s" % samplename
-    db.getfasta(config,sampleid,fastaname) # get a fasta file.
+    dbp.getfasta(sampleid,fastaname) # get a fasta file.
     # Run RDP against the newly created FASTA file #
     print "Executing RDP Analysis Pipeline...\nPlease be patient this may take a while while we examine your sample:", samplename
     rdpout = run.rdpclassifier(fastaname,thresh,datadir)
     print "Inserting RDP results into database..."
-    analysisid = db.getaid(config,thresh)
+    analysisid = dbp.getaid(thresh)
     apout,raout = m3dbparse.rdpdata(expid,rdpout,analysisid,sampleid,samplename,taxdict,thresh,datadir)
-    db.insertabundance(config,apout,rdp)
-    db.insertreadassign(config,raout)
+    dbp.insertabundance(apout,rdp)
+    dbp.insertreadassign(raout)
     print "Completed RDP Analysis!"
 def stirrups(args):
     # Run the STIRRUPS Pipeline #
@@ -115,11 +99,11 @@ def stirrups(args):
     exp = args.exp
     samplename = args.samplename
     fastaname = datadir + samplename + '.fasta'
-    taxdict = db.gettax(config,2)
-    expid = db.getexpid(config,exp)
-    sampleid = db.getsampleid(config,samplename,expid)
+    taxdict = dbp.gettax(2)
+    expid = dbp.getexpid(exp)
+    sampleid = dbp.getsampleid(samplename,expid)
     print "Generating FASTA from database... for sample: %s" % samplename
-    db.getfasta(config,sampleid,fastaname)
+    dbp.getfasta(sampleid,fastaname)
     print "Running STIRRUPS Analysis..."
     run.stirrupsclassifier(library,fastaname,samplename)
     #subprocess.Popen([perlpath,stirrupspath,'-L',library,'-R',fastaname]).wait()
@@ -129,6 +113,6 @@ def stirrups(args):
     print "Parsing results and preparing for upload..."
     apout,raout = m3dbparse.stirdata(expid,profilesummary,readassignment,analysisid,sampleid,taxdict)
     print "Inserting STIRRUPS results..."
-    db.insertabundance(config,apout,rdp)
-    db.insertreadassign(config,raout)
+    dbp.insertabundance(apout,rdp)
+    dbp.insertreadassign(raout)
     print "Completed STIRRUPS Analysis!"
