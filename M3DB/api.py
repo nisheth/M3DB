@@ -4,7 +4,8 @@ from M3DB import pipeline as run
 import Pyro4
 
 datadir = "/gpfs_fs/bccl/M3DB/data/"
-dbp =  Pyro4.Proxy("PYRO:m3db.cli@localhost:36002")
+#dbp =  Pyro4.Proxy("PYRO:Pyro.NameServer@128.172.190.159:9090")
+dbp = Pyro4.Proxy("PYRONAME:m3db.cli@128.172.190.159:9090")
 def createproject(args):
     # Create a new project #
     opts = vars(args)
