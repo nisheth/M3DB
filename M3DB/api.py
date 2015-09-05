@@ -43,8 +43,8 @@ def mefit(args):
     sampfile = open((datadir + (samplename + '_stats.txt')))
     try:
         sampleid,expid = dbp.insertsampstat((datadir + (samplename + '_stats.txt')),exp,samplename,args.forward)
-    except:
-        print "An error occured during database insertion... \n Exiting..."
+    except Exception as error:
+        print "An error occured during database insertion... \n Exiting...",error
         sys.exit(2)
     # Parse Read data and prepare it for insertion #
     print "Parsing Merged/Filtered sequence data..."
