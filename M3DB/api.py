@@ -42,7 +42,7 @@ def mefit(args):
     print "Inserting Sample Statistics Data..."#,sampfile
     sampfile = open((datadir + (samplename + '_stats.txt')))
     try:
-        sampleid,expid = dbp.insertsampstat((datadir + (samplename + '_stats.txt')),exp,samplename,args.forward)
+        sampleid,expid = dbp.insertsampstat(sampfile,exp,samplename,args.forward)
     except Exception as error:
         print "An error occured during database insertion... \n Exiting...",error
         sys.exit(2)
