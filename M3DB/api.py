@@ -43,8 +43,9 @@ def mefit(args):
     print "Inserting Sample Statistics Data..."#,sampfile
     sampfile = open((datadir + (samplename + '_stats.txt')),'r')
     header = sampfile.next()
-    stats = sampfile.next()
+    stats = re.split('\t',re.sub('\%','',sampfile.next().strip()))
     sampfile.close()
+    stats.pop(0)
     try:
         sampleid,expid = dbp.insertsampstat(stats,exp,samplename,args.forward)
     except Exception as error:
