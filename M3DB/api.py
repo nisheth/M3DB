@@ -65,8 +65,8 @@ def mefit(args):
     print "Inserting Sequence Data..."
     try:
         dbp.insertreads(outname)
-    except:
-        print "An error has occured while inserting reads...\nExiting..."
+    except Exception as error:
+        print "An error has occured while inserting reads...\nExiting...",error
         sys.exit(2)
     print "Completed Merge, Filter and upload of Sample"
 
