@@ -41,7 +41,7 @@ def mefit(args):
         print "Something went wrong with MeFit Pipeline\n Error: %s \n Exiting..." % error
         sys.exit(1)
     #Write to postgres database table "sample_statistics"
-    print "Inserting Sample Statistics Data..."#,sampfile
+    print "Inserting Sample Statistics Data..."
     sampfile = open((datadir + (samplename + '_stats.txt')),'r')
     header = sampfile.next()
     stats = re.split('\t',re.sub('\%','',sampfile.next().strip()))
@@ -73,8 +73,7 @@ def mefit(args):
     flame = Pyro4.utils.flame.connect("128.172.190.159:8081")
     seqdata = open((datadir + outname)).read()
     try:
-        print outname
-        flame.sendfile((outname),seqdata)
+        flame.sendfile((datadir + outname),seqdata)
         dbp.insertreads(outname)
     except Exception as error:
         print "An error has occured while inserting reads...\nExiting...",error
