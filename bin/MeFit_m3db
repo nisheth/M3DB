@@ -279,7 +279,6 @@ def main():
 		print >> OSSF, output_str 
 
 	OSSF.close()
-        print statsfile	
 	# Print Parameteres
 	paramsfile = datadir + "mefit_params.txt"
 	OPF = open(paramsfile, "w")
