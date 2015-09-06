@@ -59,7 +59,7 @@ def mefit(args):
             expid = dbp.getexpid(exp)
         if sampleid == None:
             sampleid = db.getsampleid(samplename,expid)
-        m3dbparse.reads((datadir + 'hq_out' + '/' + (fastq1)),(datadir + 'hq_out' + '/' + (fastq3)),outpath,samplename,sampleid,meep,expid,args.forward,args.reverse)
+        m3dbparse.reads((datadir + 'hq_out' + '/' + (fastq1)),(datadir + 'hq_out' + '/' + (fastq3)),outpath,samplename,sampleid,meep,expid,args.forward,args.reverse,datadir)
     except Exception as error:
         print "An error occured while parsing read files: %s" % error
         if os.path.isfile((datadir + 'hq_out' + '/' + (fastq3))):
@@ -79,6 +79,7 @@ def mefit(args):
         print "An error has occured while inserting reads...\nExiting...",error
         sys.exit(2)
     print "Completed Merge, Filter and upload of Sample"
+    sys.exit(0)
 
 def rdp(args):
     # Run the RDP pipeline and insert the data #
@@ -93,17 +94,30 @@ def rdp(args):
     taxdict = dbp.gettax(1)
     expid = dbp.getexpid(exp)
     sampleid = dbp.getsampleid(samplename,expid)
-    print "Generating FASTA from database... for sample: %s" % samplename
-    dbp.getfasta(sampleid,fastaname) # get a fasta file.
+    Pyro4.config.SERIALIZER = "pickle"
+    flame = Pyro4.utils.flame.connect("128.172.190.159:8081")
+    if not os.path.isfile(fastaname):
+        print "Generating FASTA from database... for sample: %s" % samplename
+        dbp.getfasta(sampleid,fastaname) # get a fasta file.
+	localfasta = open(fastaname,'w')
+	localfasta.write(flame.getfile(fastaname))
+    else:
+        print "Fasta already exists!"
     # Run RDP against the newly created FASTA file #
     print "Executing RDP Analysis Pipeline...\nPlease be patient this may take a while while we examine your sample:", samplename
     rdpout = run.rdpclassifier(fastaname,thresh,datadir)
     print "Inserting RDP results into database..."
     analysisid = dbp.getaid(thresh)
     apout,raout = m3dbparse.rdpdata(expid,rdpout,analysisid,sampleid,samplename,taxdict,thresh,datadir)
+    rabuf = open(raout).read()
+    apbuf = open(apout).read()
+    flame.sendfile(raout,rabuf)
+    flame.sendfile(apout,apbuf)
     dbp.insertabundance(apout,rdp)
     dbp.insertreadassign(raout)
     print "Completed RDP Analysis!"
+    sys.exit(0)
+
 def stirrups(args):
     # Run the STIRRUPS Pipeline #
    # datadir = config["general.datadir"]
@@ -115,8 +129,15 @@ def stirrups(args):
     taxdict = dbp.gettax(2)
     expid = dbp.getexpid(exp)
     sampleid = dbp.getsampleid(samplename,expid)
-    print "Generating FASTA from database... for sample: %s" % samplename
-    dbp.getfasta(sampleid,fastaname)
+    Pyro4.config.SERIALIZER = "pickle"
+    flame = Pyro4.utils.flame.connect("128.172.190.159:8081")
+    if not os.path.isfile(fastaname):
+        print "Generating FASTA from database... for sample: %s" % samplename
+        dbp.getfasta(sampleid,fastaname) # get a fasta file.
+        localfasta = open(fastaname,'w')
+        localfasta.write(flame.getfile(fastaname))
+    else:
+        print "Fasta already exists! This is OKAY, to force download of a fasta from the database delete the existing file..."
     print "Running STIRRUPS Analysis..."
     run.stirrupsclassifier(library,fastaname,samplename)
     #subprocess.Popen([perlpath,stirrupspath,'-L',library,'-R',fastaname]).wait()
@@ -126,6 +147,10 @@ def stirrups(args):
     print "Parsing results and preparing for upload..."
     apout,raout = m3dbparse.stirdata(expid,profilesummary,readassignment,analysisid,sampleid,taxdict)
     print "Inserting STIRRUPS results..."
+    rabuf = open(raout).read()
+    apbuf = open(apout).read()
+    flame.sendfile(raout,rabuf)
+    flame.sendfile(apout,apbuf)
     dbp.insertabundance(apout,rdp)
     dbp.insertreadassign(raout)
     print "Completed STIRRUPS Analysis!"
