@@ -71,7 +71,7 @@ def mefit(args):
     print "Inserting Sequence Data..."
     Pyro4.config.SERIALIZER = "pickle"
     flame = Pyro4.utils.flame.connect("128.172.190.159:8081")
-    seqdata = open(outname).read()
+    seqdata = open((datadir + outname)).read()
     try:
         print outname
         flame.sendfile((outname),seqdata)
