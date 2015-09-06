@@ -1,10 +1,11 @@
 import re,subprocess,sys,os,logging
 from M3DB import parse as m3dbparse
 from M3DB import pipeline as run
-import Pyro4
+import Pyro4, Pyro4.utils, Pyro4.utils.flame
 import pickle
 
 datadir = "/gpfs_fs/bccl/M3DB/data/"
+
 #dbp =  Pyro4.Proxy("PYRO:Pyro.NameServer@128.172.190.159:9090")
 dbp = Pyro4.Proxy("PYRONAME:m3db.cli@128.172.190.159:9090")
 def createproject(args):
@@ -68,7 +69,12 @@ def mefit(args):
             sys.exit(3)
     #Write reads to hive database table "reads"
     print "Inserting Sequence Data..."
+    Pyro4.config.SERIALIZER = "pickle"
+    flame = Pyro4.utils.flame.connect("128.172.190.159:8081")
+    seqdata = open(outname).read()
     try:
+        print outname
+        flame.sendfile((outname),seqdata)
         dbp.insertreads(outname)
     except Exception as error:
         print "An error has occured while inserting reads...\nExiting...",error
