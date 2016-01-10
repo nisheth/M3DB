@@ -104,5 +104,5 @@ Microsoft Azure Services:
 	(optionally --threshold may be specified if a value other than 0.8 is preferred)
 
 # M3DB Web Interface Setup:
-  In order to use the web interface you must have Django 1.7.x or newer. Customize the settings.py file to match your system(s) architecture. To serve the content Gunicorn (19.2.x or newer) and Nginx (1.6.x or newer) are recommend for production environments.
+  In order to use the web interface you must have Django 1.7.x or newer. Customize the settings.py file to match your system(s) architecture. To serve the content Gunicorn (19.2.x or newer) and Nginx (1.6.x or newer) are recommend for production environments. For more specific details see the readme.md contained within the Django folder.
   
