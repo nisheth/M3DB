@@ -1,4 +1,4 @@
-Massive Multiomic Microbiome Database (M3DB)
+Massive Multiomics Microbiome Database (M3DB)
 =============
 Description: This is a software tool written to merge, filter and perform metagomic analysis on 16S reads obtained from NGS data then store said data in Hadoop/Hive and PostgreSQL Data Warehouses.
 
