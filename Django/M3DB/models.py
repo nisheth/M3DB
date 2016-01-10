@@ -31,7 +31,7 @@ class Project(models.Model):
     pi_name = models.CharField(max_length=1000, blank=True)
     e_mail = models.CharField(max_length=1000, blank=True)
     description = models.CharField(max_length=1000, blank=True)
-    username = ForeignKey(User, null=True, db_column='username', to_field='username', blank=True)
+    username = models.ForeignKey(User, null=True, db_column='username', to_field='username', blank=True)
     authorized = models.CharField(max_length=1000,null=True,blank=True)
     def __unicode__(self):
         return self.name
