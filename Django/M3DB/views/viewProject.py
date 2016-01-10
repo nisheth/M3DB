@@ -9,7 +9,7 @@ def viewProject(request):
     params = {}
     params['projects'] = Project.objects.filter(authorized__contains=request.user)
     if request.method=='POST':
-        projectstring = request.POST.get('project__id')
+        projectstring = request.POST.get('project_id')
         request.session['project_id'] = projectstring
         messages.add_message(request, messages.SUCCESS, "Project changed to %s" % projectstring)
         return redirect('viewExperiment')
