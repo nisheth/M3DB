@@ -44,6 +44,6 @@ router.register(r'metadata',MetadataViewSet)
 router.register(r'refdb',RefDbViewSet)
 
 urlpatterns += patterns('',
-    (r'^api-auth/',include('rest_framework.urls', namespace='rest_framework')),
+    (r'^api/',include('rest_framework.urls', namespace='rest_framework')),
     (r'^api/', include(router.urls)),
     )
