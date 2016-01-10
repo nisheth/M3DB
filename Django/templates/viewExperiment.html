@@ -8,7 +8,7 @@
 				<tr><th>Experiment Name</th><th>Date Added</th><th>Platform</th><th>Project ID</th><th>Gene Region</th><th>Created by</th></tr>
 			{%for experiment in experiments%}
 			<form method="post" action="{% url 'viewExperiment' %}">
-				<tr><td>{{experiment.name}}</td><td>{{experiment.date}}</td><td>{{experiment.platform}}</td><td>{{experiment.project_id}}</td><td>{{experiment.gene_region}}</td><td><button class="btn" name="exp_id" value="{{experiment.exp_id}}" type="submit">SELECT EXPERIMENT</button></td>
+				<tr><td>{{experiment.name}}</td><td>{{experiment.date}}</td><td>{{experiment.platform}}</td><td>{{experiment.project_id}}</td><td>{{experiment.gene_region}}</td><td><button class="btn" name="exp_id" value="{{experiment.id}}" type="submit">SELECT EXPERIMENT</button></td>
 				</tr>
 			{% csrf_token %}
 			</form>

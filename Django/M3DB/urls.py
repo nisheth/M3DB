@@ -3,6 +3,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
+from rest_framework import routers
 admin.autodiscover()
 
 urlpatterns = patterns('',
@@ -29,3 +30,20 @@ urlpatterns = patterns('',
     # Uncomment the next line to enable the admin:
     url(r'^admin/', include(admin.site.urls)),
 ) + static(settings.STATIC_URL,document_root=settings.STATIC_ROOT)
+from M3DB.views.api import * 
+router = routers.DefaultRouter()
+router.register(r'project',ProjectViewSet)
+router.register(r'experiment',ExperimentViewSet)
+router.register(r'sample',SampleViewSet)
+router.register(r'samplestatistics',SampleStatisticsViewSet)
+router.register(r'taxonomy',TaxonomyViewSet)
+router.register(r'readassignment',ReadAssignmentViewSet)
+router.register(r'abundanceprofile',AbundanceProfileViewSet)
+router.register(r'analysis',AnalysisViewSet)
+router.register(r'metadata',MetadataViewSet)
+router.register(r'refdb',RefDbViewSet)
+router.register(r'users', UserViewSet)
+urlpatterns += patterns('',
+    (r'^api/',include('rest_framework.urls', namespace='rest_framework')),
+    (r'^api/', include(router.urls)),
+    )
