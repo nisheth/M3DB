@@ -15,7 +15,7 @@ class ProjectForm(forms.ModelForm):
 class ExperimentForm(forms.ModelForm):
   class Meta:
     model = Experiment
-    fields = ('exp_id','project_id','name','date','platform', 'username','gene_region')
+    fields = ('project_id','name','date','platform', 'username','gene_region')
   #project = forms.ModelChoiceField(queryset = Project.objects.all())
 
 class RegisterForm(forms.Form):
