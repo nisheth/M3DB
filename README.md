@@ -4,7 +4,7 @@ Description: This is a software tool written to merge, filter and perform metago
 
 Author: Shaun Norris (norrissw [at] vcu.edu)
 
-Date: June 22, 2015
+Date: January 20, 2016
 
 Version : v1.1.0
 
