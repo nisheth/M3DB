@@ -9,7 +9,7 @@
 				<h2>Displaying Samples in the selected Experiment: {{results.0.exp_id}}</h2>
 				<tr><th>Sample ID</th><th>Sample Name</th><th>Index 1</th><th>Index 2</th><!--<th>Plate</th><th>Well</th>--></tr>
 					{%for sample in results%}
-					<tr><td>{{sample.sample_id}}</td><td>{{sample.name}}</td><td>{{sample.index1}}</td><td>{{sample.index2}}</td><!--<td>{{sample.plate}}</td><td>{{sample.well}}</td> -->
+					<tr><td>{{sample.id}}</td><td>{{sample.name}}</td><td>{{sample.index1}}</td><td>{{sample.index2}}</td><!--<td>{{sample.plate}}</td><td>{{sample.well}}</td> -->
 					</tr>
 					{%endfor%}
 			</table></p>
