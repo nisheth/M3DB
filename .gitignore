@@ -11,3 +11,4 @@ Django/gunicorn.conf.py
 Django/M3DB/settings.py
 test_qsubm3dbcli/
 M3DB/db_pyro.py
+*.bak
