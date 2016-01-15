@@ -62,8 +62,8 @@ Microsoft Azure Services:
 * CASPER (Context-Aware Scheme for Paired-End Read): http://best.snu.ac.kr/casper
 * STIRRUPS: http://sourceforge.net/projects/stirrups/files/
 * RDP: https://github.com/rdpstaff/classifier
-* Kracken: (not yet supported)
-* CHIIME: (not yet supported)
+* Kracken: (not yet implemented) https://ccb.jhu.edu/software/kraken/
+* QIIME: (not yet implemented) http://qiime.org/
 
 # M3DB Command Line Tool: 
 	## Installation:
